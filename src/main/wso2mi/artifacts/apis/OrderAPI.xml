@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/order" name="OrderAPI" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="POST" uri-template="/">
+        <inSequence>
+            <log category="INFO" logMessageID="false" logFullPayload="false">
+                <message>Received Order Request : ${payload}</message>
+            </log>
+            <dbconnector.beginTransaction configKey="OrdersDBCon">
+                <timeout>300</timeout>
+                <isolationLevel>TRANSACTION_READ_COMMITTED</isolationLevel>
+                <resultPropertyName>result</resultPropertyName>
+            </dbconnector.beginTransaction>
+            <property name="customerId" scope="default" type="STRING" expression="json-eval($.id)"/>
+            <property name="paymentMethod" scope="default" type="STRING" expression="json-eval($.payment)"/>
+            <datamapper config="resources:datamapper/InventoryMapper/InventoryMapper.dmc" inputSchema="resources:datamapper/InventoryMapper/InventoryMapper_inputSchema.json" outputSchema="resources:datamapper/InventoryMapper/InventoryMapper_outputSchema.json"/>
+            <http.post configKey="InventoryCon">
+                <relativePath>/inventory/xml</relativePath>
+                <headers>[[&quot;test&quot;,&quot;value&quot;],]</headers>
+                <requestBodyType>XML</requestBodyType>
+                <requestBodyXml>{${xpath('$body/node()')}}</requestBodyXml>
+                <forceScAccepted>false</forceScAccepted>
+                <disableChunking>false</disableChunking>
+                <forceHttp10>false</forceHttp10>
+                <noKeepAlive>false</noKeepAlive>
+                <forcePostPutNobody>false</forcePostPutNobody>
+                <responseVariable>http_post_1</responseVariable>
+                <overwriteBody>true</overwriteBody>
+            </http.post>
+
+            <log category="INFO" logMessageID="false" logFullPayload="false">
+                <message>Response from backend : ${xpath('$body')}</message>
+            </log>
+            <variable name="orderId" type="STRING" value="order-JT322"/>
+            <dbconnector.executeQuery configKey="OrdersDBCon">
+                <query>INSERT INTO orders (customerId, paymentMethod, status) VALUES ('{$ctx:customerId}', '{$ctx:paymentMethod}', 'Accepted')</query>
+                <format>json</format>
+                <resultPropertyName>result</resultPropertyName>
+                <queryTimeout></queryTimeout>
+                <fetchSize></fetchSize>
+                <maxRows></maxRows>
+                <transactionIsolation>TRANSACTION_NONE</transactionIsolation>
+            </dbconnector.executeQuery>
+            <log category="INFO" logMessageID="false" logFullPayload="false">
+                <message>Order for customerId: ${properties.synapse.customerId} stored in the database successfully.</message>
+            </log>
+            <payloadFactory media-type="json" template-type="default">
+                <format>{"name": "Customer ${properties.synapse.customerId}", "description":"Order ${vars.orderId}"}</format>
+            </payloadFactory>
+            <salesforcerest.create configKey="SalesforceCon">
+                <sObjectName>{${properties.synapse.paymentMethod == 'VISA' ? &quot;Account&quot; : &quot;Invalid&quot;}}</sObjectName>
+                <fieldAndValue>{${payload}}</fieldAndValue>
+            </salesforcerest.create>
+            <log category="INFO" logMessageID="false" logFullPayload="false">
+                <message>Response from Salsesfosasrce : ${payload}
+</message>
+            </log>
+            <filter xpath="${properties.axis2.HTTP_SC == 201}">
+                <then>
+                    <variable name="SalesforceOrderId" type="STRING" expression="${payload.id}" />
+                    <dbconnector.commitTransaction configKey="OrdersDBCon">
+</dbconnector.commitTransaction>
+                </then>
+                <else>
+                    <throwError errorMessage="Failure to add object to Salesforce"
+                        type="TRANSACTION_ERROR" />
+                </else>
+            </filter>
+            <payloadFactory media-type="json" template-type="default">
+                <format>{"status" : "success", "message" : "Order request processed successfully for customerId: ${properties.synapse.customerId}", "orderId" : "${vars.orderId}", "paymentId": "${vars.SalesforceOrderId}"}</format>
+            </payloadFactory>
+            <respond />
+        </inSequence>
+        <faultSequence>
+            <http.delete configKey="InventoryCon">
+                <relativePath>/inventory/${properties.synapse.customerId}</relativePath>
+                <headers>[]</headers>
+                <forceScAccepted>false</forceScAccepted>
+                <disableChunking>false</disableChunking>
+                <forceHttp10>false</forceHttp10>
+                <noKeepAlive>false</noKeepAlive>
+                <responseVariable>http_delete_1</responseVariable>
+                <overwriteBody>true</overwriteBody>
+            </http.delete>
+            <dbconnector.rollbackTransaction configKey="OrdersDBCon">
+            </dbconnector.rollbackTransaction>
+            <payloadFactory media-type="json" template-type="default">
+                <format>{"status" : "failed", "message" : "Order request failed for customerId: ${properties.synapse.customerId}"}</format>
+            </payloadFactory>
+            <respond />
+        </faultSequence>
+    </resource>
+</api>

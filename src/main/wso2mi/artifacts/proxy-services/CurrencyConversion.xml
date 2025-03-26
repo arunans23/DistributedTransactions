@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<proxy name="CurrencyConversion" startOnLoad="true" transports="http https" xmlns="http://ws.apache.org/ns/synapse">
+    <target>
+        <inSequence>
+            <payloadFactory media-type="xml" template-type="default">
+                <format>&lt;Result&gt;&lt;currency&gt;GBP&lt;/currency&gt;&lt;amount&gt;70.81&lt;/amount&gt;&lt;/Result&gt;</format>
+            </payloadFactory>
+            <respond/>
+        </inSequence>
+        <faultSequence/>
+    </target>
+</proxy>

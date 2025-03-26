@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<localEntry key="OrdersDBCon" xmlns="http://ws.apache.org/ns/synapse">
+  <dbconnector.init>
+    <connectionType>MYSQL</connectionType>
+    <dbUrl>jdbc:mysql://localhost:3306/orders</dbUrl>
+    <dbUser>root</dbUser>
+    <dbPassword>root</dbPassword>
+    <driverClass>com.mysql.jdbc.Driver</driverClass>
+    <userConsent>true</userConsent>
+    <isPassive>true</isPassive>
+    <name>OrdersDBCon</name>
+  </dbconnector.init>
+</localEntry>

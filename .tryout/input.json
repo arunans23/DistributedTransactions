@@ -1,0 +1,1 @@
+[{"name":"orderInput","content":{"customerId":"C12345","orderItems":[{"productId":"P1001","quantity":2},{"productId":"P2003","quantity":1}],"paymentMethod":"VISA"}},{"name":"metricsInput","content":[{"productId":"1001","value":90.6},{"productId":"2003","value":86.6}]}]

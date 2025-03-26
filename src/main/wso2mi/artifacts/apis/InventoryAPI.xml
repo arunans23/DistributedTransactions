@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/inventory" name="InventoryAPI" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="GET" uri-template="/">
+        <inSequence>
+        </inSequence>
+        <faultSequence>
+        </faultSequence>
+    </resource>
+    <resource methods="POST" uri-template="/">
+        <inSequence>
+            <log category="INFO" logMessageID="false" logFullPayload="false">
+                <message>Received request to process the inventory request for customerId: ${payload.customerId}.</message>
+            </log>
+            <foreach collection="${payload.orderItems}" parallel-execution="true"
+                update-original="true" continue-without-aggregation="false">
+                <sequence>
+                    <payloadFactory media-type="json" template-type="default">
+
+                        <format>{ "productId":
+                            ${payload.productId}, "available": true }</format>
+                    </payloadFactory>
+                </sequence>
+            </foreach>
+            <enrich description="" >
+        <source clone="true" type="inline">
+            {"orderId" : "order-JT322"}
+        </source>
+        
+        <target action="child"    xpath="json-eval($)"/>
+    </enrich><respond />
+        </inSequence>
+        <faultSequence>
+        </faultSequence>
+    </resource>
+    <resource methods="POST" uri-template="/xml">
+        <inSequence>
+            <log category="INFO" logMessageID="false" logFullPayload="false">
+                <message>Received request to process the inventory request for customerId: ${xpath('//Order/customerId/text()')}.</message>
+            </log>
+            <foreach collection="${xpath('//orderItems')}" parallel-execution="true"
+                update-original="true" continue-without-aggregation="false">
+                <sequence>
+                    <payloadFactory media-type="xml" template-type="default">
+                        <format>
+                            <orderItems><productId>${payload.orderItems.productId}</productId>
+                                <available>true</available>
+                            </orderItems>
+                        </format>
+                    </payloadFactory>
+                </sequence>
+            </foreach>
+            <enrich description="">
+                <source clone="true" type="inline">
+                    <orderId>order-JT322</orderId>
+                </source>
+                <target action="child" xpath="//Order"/>
+            </enrich>
+            <respond />
+        </inSequence>
+        <faultSequence>
+        </faultSequence>
+    </resource>
+    <resource methods="DELETE" uri-template="/{customerId}">
+        <inSequence>
+                    
+            <log category="INFO" logMessageID="false" logFullPayload="false">
+                <message>Received request to delete the inventory request for customerId:${params.pathParams.customerId}.</message>
+            </log>
+            <payloadFactory media-type="json" template-type="default">
+
+                <format>{"customerId": "${params.pathParams.customerId}", "message" : "Reverted"}</format>
+            </payloadFactory>
+            <respond />
+        </inSequence>
+        <faultSequence>
+        </faultSequence>
+    </resource>
+</api>

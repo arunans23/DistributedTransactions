@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<localEntry key="SalesforceCon" xmlns="http://ws.apache.org/ns/synapse">
+  <salesforcerest.init>
+    <connectionType>INIT</connectionType>
+    <accessToken>{${configs.sf_access_token}}</accessToken>
+    <apiVersion>v48.0</apiVersion>
+    <hostName>https://login.salesforce.com</hostName>
+    <refreshToken>{${configs.sf_refresh_token}}</refreshToken>
+    <clientSecret>{${configs.sf_client_secret}}</clientSecret>
+    <clientId>{${configs.sf_client_id}}</clientId>
+    <apiUrl>https://librarycom2-dev-ed.develop.my.salesforce.com</apiUrl>
+    <timeout>3000</timeout>
+    <name>SalesforceCon</name>
+  </salesforcerest.init>
+</localEntry>

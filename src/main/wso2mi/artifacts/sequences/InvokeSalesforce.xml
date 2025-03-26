@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="InvokeSalesforce" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+            <salesforcerest.create configKey="SalesforceCon">
+                <sObjectName>Account</sObjectName>
+                <fieldAndValue>{${vars.fieldAndValue}}</fieldAndValue>
+            </salesforcerest.create>
+</sequence>
